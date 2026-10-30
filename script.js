@@ -136,6 +136,11 @@ function processAnswer(spokenText) {
     score++;
     scoreDisplay.textContent = `${score} / ${targetScore}`;
 
+    // Start timer precisely after the first correct answer
+    if (score === 1) {
+      startTimer();
+    }
+
     if (score >= targetScore) {
       stopTimer();
       isPlaying = false;
@@ -158,8 +163,10 @@ function processAnswer(spokenText) {
   } else {
     score = 0;
     scoreDisplay.textContent = `${score} / ${targetScore}`;
+    stopTimer(); // Stop timer if score resets on mistake
+    timerDisplay.textContent = "00:00";
     feedbackDisplay.className = 'feedback wrong';
-    feedbackDisplay.textContent = `Incorrect! Score reset. Say the total again.`;
+    feedbackDisplay.textContent = `Incorrect! Score & timer reset. Say the total again.`;
   }
 }
 
@@ -182,7 +189,7 @@ function startGame() {
   startBtn.textContent = "Stop Game";
   startBtn.classList.add('active');
 
-  startTimer();
+  // Timer will start automatically upon the first correct answer
 
   try {
     recognition.start();
