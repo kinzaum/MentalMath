@@ -1,4 +1,4 @@
-// Dictionary for word-to-number mapping to support spoken word inputs
+// Dictionary for word-to-number mapping (including negative numbers)
 const numberMap = {
   'zero': 0, 'one': 1, 'two': 2, 'to': 2, 'too': 2, 'three': 3, 'four': 4, 'for': 4,
   'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'ate': 8, 'nine': 9, 'ten': 10,
@@ -9,8 +9,8 @@ const numberMap = {
 
 let runningTotal = 0;
 let score = 0;
-let currentRandomNumber = 0;
 let isPlaying = false;
+let currentGameMode = 'add'; // 'add', 'subtract', or 'mixed'
 let recognition = null;
 
 const numberDisplay = document.getElementById('number-display');
@@ -18,6 +18,7 @@ const scoreDisplay = document.getElementById('score');
 const feedbackDisplay = document.getElementById('feedback');
 const transcriptDisplay = document.getElementById('transcript');
 const startBtn = document.getElementById('start-btn');
+const modeButtons = document.querySelectorAll('.mode-btn');
 
 // Initialize Web Speech Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -60,15 +61,22 @@ if (!SpeechRecognition) {
 }
 
 function parseSpokenNumber(text) {
-  const directDigits = text.match(/\d+/);
+  // Check if speech contains 'minus' or 'negative'
+  const isNegative = text.includes('minus') || text.includes('negative');
+
+  // Match digits (including potential minus sign)
+  const directDigits = text.match(/-?\d+/);
   if (directDigits) {
-    return parseInt(directDigits[0], 10);
+    let num = parseInt(directDigits[0], 10);
+    return isNegative && num > 0 ? -num : num;
   }
 
+  // Match word representations
   const words = text.split(/\s+/);
   for (let word of words) {
     if (numberMap.hasOwnProperty(word)) {
-      return numberMap[word];
+      let val = numberMap[word];
+      return isNegative ? -val : val;
     }
   }
 
@@ -76,10 +84,27 @@ function parseSpokenNumber(text) {
 }
 
 function nextTurn() {
-  currentRandomNumber = Math.floor(Math.random() * 10);
-  runningTotal += currentRandomNumber;
+  const randomVal = Math.floor(Math.random() * 10);
+  let isAddition = true;
 
-  numberDisplay.textContent = currentRandomNumber;
+  if (currentGameMode === 'add') {
+    isAddition = true;
+  } else if (currentGameMode === 'subtract') {
+    isAddition = false;
+  } else if (currentGameMode === 'mixed') {
+    // Randomly choose addition or subtraction
+    isAddition = Math.random() >= 0.5;
+  }
+
+  // Adjust total and set formatted display string
+  if (isAddition) {
+    runningTotal += randomVal;
+    numberDisplay.textContent = `+${randomVal}`;
+  } else {
+    runningTotal -= randomVal;
+    numberDisplay.textContent = `-${randomVal}`;
+  }
+
   feedbackDisplay.className = 'feedback listening';
   feedbackDisplay.textContent = "Listening for your answer...";
 }
@@ -103,12 +128,23 @@ function processAnswer(spokenText) {
       if (isPlaying) nextTurn();
     }, 1200);
   } else {
-    score = 0; // Optional: reset score on mistake, or leave it. Let's reset score for penalty!
+    score = 0;
     scoreDisplay.textContent = score;
     feedbackDisplay.className = 'feedback wrong';
-    feedbackDisplay.textContent = `Incorrect! Score reset. Try saying the total again.`;
+    feedbackDisplay.textContent = `Incorrect! Score reset. Try saying the new total again.`;
   }
 }
+
+// Mode Selector Buttons Listener
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (isPlaying) stopGame(); // Stop current session if active when switching modes
+
+    modeButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentGameMode = btn.dataset.mode;
+  });
+});
 
 function startGame() {
   isPlaying = true;
@@ -121,7 +157,7 @@ function startGame() {
   try {
     recognition.start();
   } catch (e) {
-    console.log("Recognition already active.");
+    console.log("Recognition active.");
   }
 
   nextTurn();
@@ -134,6 +170,7 @@ function stopGame() {
   feedbackDisplay.className = 'feedback';
   feedbackDisplay.textContent = "Game Paused. Click Start to Play.";
   transcriptDisplay.textContent = 'Heard: "..."';
+  numberDisplay.textContent = '?';
 
   if (recognition) {
     recognition.stop();
