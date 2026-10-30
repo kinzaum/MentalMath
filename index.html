@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Addition Math Challenge</title>
+  <title>Voice Math Speed Challenge</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="container">
     <h1>Voice Math Challenge</h1>
-    <p class="instructions" id="instructions">Keep a running total in your head and say the answer aloud!</p>
+    <p class="instructions" id="instructions">Get 10 correct answers as fast as you can!</p>
 
     <!-- Game Mode Selector -->
     <div class="mode-selector">
@@ -19,10 +19,15 @@
       <button class="mode-btn" data-mode="mixed">Mixed (+/-)</button>
     </div>
 
+    <!-- Stats: Score & Timer -->
     <div class="stats">
       <div class="stat-item">
         <span class="stat-label">Score</span>
-        <span class="stat-value" id="score">0</span>
+        <span class="stat-value" id="score">0 / 10</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Time</span>
+        <span class="stat-value" id="timer">00:00</span>
       </div>
     </div>
 
