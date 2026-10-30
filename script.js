@@ -1,4 +1,3 @@
-// Dictionary for word-to-number mapping (including negative numbers)
 const numberMap = {
   'zero': 0, 'one': 1, 'two': 2, 'to': 2, 'too': 2, 'three': 3, 'four': 4, 'for': 4,
   'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'ate': 8, 'nine': 9, 'ten': 10,
@@ -9,12 +8,18 @@ const numberMap = {
 
 let runningTotal = 0;
 let score = 0;
+const targetScore = 10;
 let isPlaying = false;
-let currentGameMode = 'add'; // 'add', 'subtract', or 'mixed'
+let currentGameMode = 'add'; 
 let recognition = null;
+
+// Timer variables
+let startTime = 0;
+let timerInterval = null;
 
 const numberDisplay = document.getElementById('number-display');
 const scoreDisplay = document.getElementById('score');
+const timerDisplay = document.getElementById('timer');
 const feedbackDisplay = document.getElementById('feedback');
 const transcriptDisplay = document.getElementById('transcript');
 const startBtn = document.getElementById('start-btn');
@@ -61,17 +66,13 @@ if (!SpeechRecognition) {
 }
 
 function parseSpokenNumber(text) {
-  // Check if speech contains 'minus' or 'negative'
   const isNegative = text.includes('minus') || text.includes('negative');
-
-  // Match digits (including potential minus sign)
   const directDigits = text.match(/-?\d+/);
   if (directDigits) {
     let num = parseInt(directDigits[0], 10);
     return isNegative && num > 0 ? -num : num;
   }
 
-  // Match word representations
   const words = text.split(/\s+/);
   for (let word of words) {
     if (numberMap.hasOwnProperty(word)) {
@@ -83,6 +84,21 @@ function parseSpokenNumber(text) {
   return null;
 }
 
+function startTimer() {
+  startTime = Date.now();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+    const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+    timerDisplay.textContent = `${minutes}:${seconds}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
 function nextTurn() {
   const randomVal = Math.floor(Math.random() * 10);
   let isAddition = true;
@@ -92,11 +108,9 @@ function nextTurn() {
   } else if (currentGameMode === 'subtract') {
     isAddition = false;
   } else if (currentGameMode === 'mixed') {
-    // Randomly choose addition or subtraction
     isAddition = Math.random() >= 0.5;
   }
 
-  // Adjust total and set formatted display string
   if (isAddition) {
     runningTotal += randomVal;
     numberDisplay.textContent = `+${randomVal}`;
@@ -120,25 +134,38 @@ function processAnswer(spokenText) {
 
   if (recognizedNum === runningTotal) {
     score++;
-    scoreDisplay.textContent = score;
+    scoreDisplay.textContent = `${score} / ${targetScore}`;
+
+    if (score >= targetScore) {
+      stopTimer();
+      isPlaying = false;
+      if (recognition) recognition.stop();
+
+      feedbackDisplay.className = 'feedback correct';
+      feedbackDisplay.textContent = `🎉 Completed in ${timerDisplay.textContent}! Amazing human speed!`;
+      startBtn.textContent = "Play Again";
+      startBtn.classList.remove('active');
+      numberDisplay.textContent = '🏆';
+      return;
+    }
+
     feedbackDisplay.className = 'feedback correct';
     feedbackDisplay.textContent = "Correct! Loading next number...";
 
     setTimeout(() => {
       if (isPlaying) nextTurn();
-    }, 1200);
+    }, 1000);
   } else {
     score = 0;
-    scoreDisplay.textContent = score;
+    scoreDisplay.textContent = `${score} / ${targetScore}`;
     feedbackDisplay.className = 'feedback wrong';
-    feedbackDisplay.textContent = `Incorrect! Score reset. Try saying the new total again.`;
+    feedbackDisplay.textContent = `Incorrect! Score reset. Say the total again.`;
   }
 }
 
-// Mode Selector Buttons Listener
 modeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
-    if (isPlaying) stopGame(); // Stop current session if active when switching modes
+    if (isPlaying) stopGame();
 
     modeButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -150,9 +177,12 @@ function startGame() {
   isPlaying = true;
   score = 0;
   runningTotal = 0;
-  scoreDisplay.textContent = score;
+  scoreDisplay.textContent = `${score} / ${targetScore}`;
+  timerDisplay.textContent = "00:00";
   startBtn.textContent = "Stop Game";
   startBtn.classList.add('active');
+
+  startTimer();
 
   try {
     recognition.start();
@@ -165,6 +195,7 @@ function startGame() {
 
 function stopGame() {
   isPlaying = false;
+  stopTimer();
   startBtn.textContent = "Start Game";
   startBtn.classList.remove('active');
   feedbackDisplay.className = 'feedback';
