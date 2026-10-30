@@ -17,6 +17,15 @@
       <button class="mode-btn active" data-mode="add">Addition (+)</button>
       <button class="mode-btn" data-mode="subtract">Subtraction (-)</button>
       <button class="mode-btn" data-mode="mixed">Mixed (+/-)</button>
+      <button class="mode-btn" data-mode="table">Times Table</button>
+    </div>
+
+    <!-- Times Table Selector Dropdown (Hidden by default) -->
+    <div class="table-selector-container hidden" id="table-selector-container">
+      <label for="table-select">Select Table:</label>
+      <select id="table-select" class="table-select">
+        <!-- JS will populate options 1 to 99 -->
+      </select>
     </div>
 
     <!-- Stats: Score & Timer -->
@@ -32,7 +41,7 @@
     </div>
 
     <div class="display-box">
-      <div class="number-label">New Number</div>
+      <div class="number-label" id="number-label">New Number</div>
       <div class="current-number" id="number-display">?</div>
     </div>
 
