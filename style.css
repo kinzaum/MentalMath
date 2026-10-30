@@ -29,7 +29,7 @@ body {
   background: var(--card-bg);
   border-radius: 20px;
   padding: 40px;
-  max-width: 480px;
+  max-width: 500px;
   width: 100%;
   text-align: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
@@ -50,16 +50,17 @@ p.instructions {
 /* Mode Selector Tabs */
 .mode-selector {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   background: rgba(0, 0, 0, 0.2);
   padding: 6px;
   border-radius: 12px;
 }
 
 .mode-btn {
-  flex: 1;
+  flex: 1 1 40%;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -78,6 +79,40 @@ p.instructions {
 .mode-btn.active {
   background: var(--accent);
   color: #0f172a;
+}
+
+/* Times Table Selector Styling */
+.table-selector-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.table-selector-container.hidden {
+  display: none;
+}
+
+.table-selector-container label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.table-select {
+  background: #0f172a;
+  color: var(--accent);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
 }
 
 .stats {
@@ -137,17 +172,9 @@ p.instructions {
   transition: color 0.2s ease;
 }
 
-.feedback.correct {
-  color: var(--success);
-}
-
-.feedback.wrong {
-  color: var(--error);
-}
-
-.feedback.listening {
-  color: var(--accent);
-}
+.feedback.correct { color: var(--success); }
+.feedback.wrong { color: var(--error); }
+.feedback.listening { color: var(--accent); }
 
 .transcript-box {
   font-size: 0.9rem;
@@ -183,13 +210,7 @@ p.instructions {
 }
 
 @keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
