@@ -3,14 +3,17 @@ const numberMap = {
   'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'ate': 8, 'nine': 9, 'ten': 10,
   'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
   'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
-  'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90
+  'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+  'hundred': 100
 };
 
 let runningTotal = 0;
+let expectedAnswer = 0;
 let score = 0;
 const targetScore = 10;
 let isPlaying = false;
-let currentGameMode = 'add'; 
+let currentGameMode = 'add'; // 'add', 'subtract', 'mixed', or 'table'
+let selectedTable = 1;
 let recognition = null;
 
 // Timer variables
@@ -18,12 +21,28 @@ let startTime = 0;
 let timerInterval = null;
 
 const numberDisplay = document.getElementById('number-display');
+const numberLabel = document.getElementById('number-label');
 const scoreDisplay = document.getElementById('score');
 const timerDisplay = document.getElementById('timer');
 const feedbackDisplay = document.getElementById('feedback');
 const transcriptDisplay = document.getElementById('transcript');
 const startBtn = document.getElementById('start-btn');
 const modeButtons = document.querySelectorAll('.mode-btn');
+const tableSelectorContainer = document.getElementById('table-selector-container');
+const tableSelect = document.getElementById('table-select');
+
+// Populate Times Table dropdown from 1 to 99
+for (let i = 1; i <= 99; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${i} Times Table`;
+  tableSelect.appendChild(opt);
+}
+
+tableSelect.addEventListener('change', (e) => {
+  selectedTable = parseInt(e.target.value, 10);
+  if (isPlaying) stopGame();
+});
 
 // Initialize Web Speech Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -100,23 +119,34 @@ function stopTimer() {
 }
 
 function nextTurn() {
-  const randomVal = Math.floor(Math.random() * 10);
-  let isAddition = true;
-
-  if (currentGameMode === 'add') {
-    isAddition = true;
-  } else if (currentGameMode === 'subtract') {
-    isAddition = false;
-  } else if (currentGameMode === 'mixed') {
-    isAddition = Math.random() >= 0.5;
-  }
-
-  if (isAddition) {
-    runningTotal += randomVal;
-    numberDisplay.textContent = `+${randomVal}`;
+  if (currentGameMode === 'table') {
+    // Multiplication table turn: Score 0 = multiplier 1, Score 1 = multiplier 2... up to 10
+    const multiplier = score + 1;
+    expectedAnswer = selectedTable * multiplier;
+    numberLabel.textContent = `Multiply by`;
+    numberDisplay.textContent = `${selectedTable} × ${multiplier}`;
   } else {
-    runningTotal -= randomVal;
-    numberDisplay.textContent = `-${randomVal}`;
+    // Addition / Subtraction / Mixed running total turn
+    numberLabel.textContent = `New Number`;
+    const randomVal = Math.floor(Math.random() * 10);
+    let isAddition = true;
+
+    if (currentGameMode === 'add') {
+      isAddition = true;
+    } else if (currentGameMode === 'subtract') {
+      isAddition = false;
+    } else if (currentGameMode === 'mixed') {
+      isAddition = Math.random() >= 0.5;
+    }
+
+    if (isAddition) {
+      runningTotal += randomVal;
+      numberDisplay.textContent = `+${randomVal}`;
+    } else {
+      runningTotal -= randomVal;
+      numberDisplay.textContent = `-${randomVal}`;
+    }
+    expectedAnswer = runningTotal;
   }
 
   feedbackDisplay.className = 'feedback listening';
@@ -132,7 +162,7 @@ function processAnswer(spokenText) {
     return;
   }
 
-  if (recognizedNum === runningTotal) {
+  if (recognizedNum === expectedAnswer) {
     score++;
     scoreDisplay.textContent = `${score} / ${targetScore}`;
 
@@ -147,7 +177,7 @@ function processAnswer(spokenText) {
       if (recognition) recognition.stop();
 
       feedbackDisplay.className = 'feedback correct';
-      feedbackDisplay.textContent = `🎉 Completed in ${timerDisplay.textContent}! Amazing human speed!`;
+      feedbackDisplay.textContent = `🎉 Completed in ${timerDisplay.textContent}! Amazing speed!`;
       startBtn.textContent = "Play Again";
       startBtn.classList.remove('active');
       numberDisplay.textContent = '🏆';
@@ -155,7 +185,7 @@ function processAnswer(spokenText) {
     }
 
     feedbackDisplay.className = 'feedback correct';
-    feedbackDisplay.textContent = "Correct! Loading next number...";
+    feedbackDisplay.textContent = "Correct! Loading next question...";
 
     setTimeout(() => {
       if (isPlaying) nextTurn();
@@ -163,10 +193,10 @@ function processAnswer(spokenText) {
   } else {
     score = 0;
     scoreDisplay.textContent = `${score} / ${targetScore}`;
-    stopTimer(); // Stop timer if score resets on mistake
+    stopTimer();
     timerDisplay.textContent = "00:00";
     feedbackDisplay.className = 'feedback wrong';
-    feedbackDisplay.textContent = `Incorrect! Score & timer reset. Say the total again.`;
+    feedbackDisplay.textContent = `Incorrect (${recognizedNum})! Score & timer reset. Try again.`;
   }
 }
 
@@ -177,6 +207,13 @@ modeButtons.forEach(btn => {
     modeButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentGameMode = btn.dataset.mode;
+
+    // Show table selector only if "Times Table" mode is selected
+    if (currentGameMode === 'table') {
+      tableSelectorContainer.classList.remove('hidden');
+    } else {
+      tableSelectorContainer.classList.add('hidden');
+    }
   });
 });
 
@@ -188,8 +225,6 @@ function startGame() {
   timerDisplay.textContent = "00:00";
   startBtn.textContent = "Stop Game";
   startBtn.classList.add('active');
-
-  // Timer will start automatically upon the first correct answer
 
   try {
     recognition.start();
