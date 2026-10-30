@@ -9,8 +9,15 @@
 <body>
 
   <div class="container">
-    <h1>Voice Addition Challenge</h1>
-    <p class="instructions">Add each new number to your running total in your head and say the sum!</p>
+    <h1>Voice Math Challenge</h1>
+    <p class="instructions" id="instructions">Keep a running total in your head and say the answer aloud!</p>
+
+    <!-- Game Mode Selector -->
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="add">Addition (+)</button>
+      <button class="mode-btn" data-mode="subtract">Subtraction (-)</button>
+      <button class="mode-btn" data-mode="mixed">Mixed (+/-)</button>
+    </div>
 
     <div class="stats">
       <div class="stat-item">
