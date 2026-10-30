@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Addition Math Challenge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Voice Addition Challenge</h1>
+    <p class="instructions">Say the current total plus the new number displayed on screen!</p>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-label">Score</span>
+        <span class="stat-value" id="score">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Target Total</span>
+        <span class="stat-value" id="target">?</span>
+      </div>
+    </div>
+
+    <div class="display-box">
+      <div class="number-label">New Number</div>
+      <div class="current-number" id="number-display">?</div>
+    </div>
+
+    <div class="feedback" id="feedback">Click Start to Play</div>
+    <div class="transcript-box" id="transcript">Heard: "..."</div>
+
+    <button class="mic-btn" id="start-btn">Start Game</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
