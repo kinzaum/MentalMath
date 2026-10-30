@@ -14,7 +14,6 @@ let isPlaying = false;
 let recognition = null;
 
 const numberDisplay = document.getElementById('number-display');
-const targetDisplay = document.getElementById('target');
 const scoreDisplay = document.getElementById('score');
 const feedbackDisplay = document.getElementById('feedback');
 const transcriptDisplay = document.getElementById('transcript');
@@ -41,13 +40,15 @@ if (!SpeechRecognition) {
 
   recognition.onerror = (event) => {
     console.error("Speech recognition error:", event.error);
-    if (event.error === 'no-speech') {
+    if (event.error === 'not-allowed') {
+      feedbackDisplay.className = 'feedback wrong';
+      feedbackDisplay.textContent = "Microphone access denied! Please allow mic permissions.";
+    } else if (event.error === 'no-speech') {
       feedbackDisplay.textContent = "Listening... Speak your answer!";
     }
   };
 
   recognition.onend = () => {
-    // Keep recognition active while playing
     if (isPlaying) {
       try {
         recognition.start();
@@ -59,13 +60,11 @@ if (!SpeechRecognition) {
 }
 
 function parseSpokenNumber(text) {
-  // Try matching numeric digits directly
   const directDigits = text.match(/\d+/);
   if (directDigits) {
     return parseInt(directDigits[0], 10);
   }
 
-  // Try matching word equivalents
   const words = text.split(/\s+/);
   for (let word of words) {
     if (numberMap.hasOwnProperty(word)) {
@@ -77,12 +76,10 @@ function parseSpokenNumber(text) {
 }
 
 function nextTurn() {
-  // Generate a new random number from 0 to 9
   currentRandomNumber = Math.floor(Math.random() * 10);
   runningTotal += currentRandomNumber;
 
   numberDisplay.textContent = currentRandomNumber;
-  targetDisplay.textContent = runningTotal;
   feedbackDisplay.className = 'feedback listening';
   feedbackDisplay.textContent = "Listening for your answer...";
 }
@@ -106,8 +103,10 @@ function processAnswer(spokenText) {
       if (isPlaying) nextTurn();
     }, 1200);
   } else {
+    score = 0; // Optional: reset score on mistake, or leave it. Let's reset score for penalty!
+    scoreDisplay.textContent = score;
     feedbackDisplay.className = 'feedback wrong';
-    feedbackDisplay.textContent = `Incorrect (${recognizedNum}). Total is ${runningTotal}. Try again!`;
+    feedbackDisplay.textContent = `Incorrect! Score reset. Try saying the total again.`;
   }
 }
 
